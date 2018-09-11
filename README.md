@@ -1,1 +1,1 @@
-# noteful-app-v2
+# noteful-app
