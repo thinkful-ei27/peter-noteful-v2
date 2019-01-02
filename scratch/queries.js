@@ -18,3 +18,32 @@ knex
   .catch(err => {
     console.error(err);
   });
+
+const noteParam = 1001;
+knex
+  .select('id', 'title', 'content')
+  .from('notes')
+  .where('id', noteParam)
+  .orderBy('id')
+  .then(results => console.log(results[0]))
+  .catch(err => console.log(err));
+
+const updateData = {
+  title: 'This is an updated titled',
+  content: 'This is updated content'
+};
+
+knex('notes')
+  .where({id: noteParam})
+  .update(updateData, ['id', 'title', 'content'])
+  .then(results => console.log(results))
+  .catch(err => console.log(err));
+
+knex
+  .insert({
+    title: 'This title has been inserted using Knex', 
+    content: 'inserted content'
+  }, ['id', 'title', 'content'])
+  .into('notes')
+  .then(results => console.log(results[0]))
+  .catch(err => console.log(err));
