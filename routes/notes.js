@@ -37,12 +37,12 @@ router.get('/:id', (req, res, next) => {
   const id = req.params.id;
 
   knex
-  .select('id', 'title', 'content')
-  .from('notes')
-  .where('id', id)
-  .orderBy('id')
-  .then(results => res.json(results[0]))
-  .catch(err => next(err));
+    .select('id', 'title', 'content')
+    .from('notes')
+    .where('id', id)
+    .orderBy('id')
+    .then(results => res.json(results[0]))
+    .catch(err => next(err));
 });
 // Put update an item
 router.put('/:id', (req, res, next) => {
@@ -87,8 +87,8 @@ router.post('/', (req, res, next) => {
   knex
     .insert(newItem, ['id', 'title', 'content'])
     .into('notes')
-    .then(results => console.log(results[0]))
-    .catch(err => console.log(err));
+    .then(results => res.json(results[0]))
+    .catch(err => next(err));
 });
 
 // Delete an item
