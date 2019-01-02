@@ -47,3 +47,10 @@ knex
   .into('notes')
   .then(results => console.log(results[0]))
   .catch(err => console.log(err));
+
+const deleteId = 1010;
+knex('notes')
+  .where('id', deleteId)
+  .del()
+  .then(results => console.log(results));
+
