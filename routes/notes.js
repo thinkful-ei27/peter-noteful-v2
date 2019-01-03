@@ -57,8 +57,9 @@ router.put('/:id', (req, res, next) => {
 
   /***** Never trust users - validate input *****/
   const updateObj = {};
-  const updateableFields = ['title', 'content'];
-
+  const updateableFields = ['title', 'content', 'folder_id'];
+  let noteId;
+  
   updateableFields.forEach(field => {
     if (field in req.body) {
       updateObj[field] = req.body[field];
@@ -74,16 +75,30 @@ router.put('/:id', (req, res, next) => {
 
   knex('notes')
     .where({id: id})
-    .update(updateObj, ['id', 'title', 'content'])
-    .then(results => res.json(results[0]))
+    .update(updateObj, ['id'])
+    .then(([updateObj]) => {
+      noteId = updateObj.id;
+      return knex.select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .from('notes')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', noteId);
+    })
+    .then(([result]) => res.json(result))
     .catch(err => next(err));
 });
 
 // Post (insert) an item
 router.post('/', (req, res, next) => {
-  const { title, content } = req.body;
+  const { title, content, folderId } = req.body;
 
-  const newItem = { title, content };
+  const newItem = { 
+    title, 
+    content,
+    folder_id: folderId
+  };
+
+  let noteId;
+
   /***** Never trust users - validate input *****/
   if (!newItem.title) {
     const err = new Error('Missing `title` in request body');
@@ -92,9 +107,19 @@ router.post('/', (req, res, next) => {
   }
 
   knex
-    .insert(newItem, ['id', 'title', 'content'])
+    .insert(newItem)
     .into('notes')
-    .then(results => res.json(results[0]))
+    .returning('id')
+    .then(([id]) => {
+      noteId = id;
+      return knex.select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName')
+        .from('notes')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', noteId);
+    })
+    .then(([result]) => {
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+    })
     .catch(err => next(err));
 });
 
