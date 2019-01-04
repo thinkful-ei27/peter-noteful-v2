@@ -30,31 +30,32 @@ router.get('/folders/:id', (req, res, next) => {
 });
 
 // Put update an item
-router.put('/folders/:id', (req, res, next) => {
-  const { id } = req.params;
+router.put('/:id', (req, res, next) => {
+  const { name } = req.body;
 
-  /***** Never trust users - validate input *****/
-  const updateObj = {};
-  const updateableField = ['name'];
-
-  updateableField.forEach(field => {
-    if (field in req.body) {
-      updateObj[field] = req.body[field];
-    }
-  });
-
-  /***** Never trust users - validate input *****/
-  if (!updateObj.name) {
+  /***** Never trust users. Validate input *****/
+  if (!name) {
     const err = new Error('Missing `name` in request body');
     err.status = 400;
     return next(err);
   }
 
+  const updateItem = { name };
+
   knex('folders')
-    .where('id', id)
-    .update(updateObj, 'name')
-    .then(results => res.json(results[0]))
-    .catch(err => next(err));
+    .update(updateItem)
+    .where('id', req.params.id)
+    .returning(['id', 'name'])
+    .then(([result]) => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      next(err);
+    });
 });
 
 // Post - Create(insert) New Folder

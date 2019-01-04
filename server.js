@@ -29,7 +29,7 @@ app.use(express.json());
 // Mount router(s) on "/api"
 app.use('/api/notes', notesRouter);
 app.use('/api', foldersRouter);
-app.use('/api', tagsRouter);
+app.use('/api/tags', tagsRouter);
 
 // Custom 404 Not Found route handler
 app.use((req, res, next) => {

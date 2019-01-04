@@ -7,7 +7,7 @@ const router = express.Router();
 const knex = require('../knex');
 
 // GET all tags
-router.get('/tags', (req, res, next) => {
+router.get('/', (req, res, next) => {
   knex.select('id', 'name')
     .from('tags')
     .orderBy('id')
@@ -16,7 +16,7 @@ router.get('/tags', (req, res, next) => {
 });
 
 // GET single tag by id
-router.get('/tags/:id', (req, res, next) => {
+router.get('/:id', (req, res, next) => {
   const { id } = req.params;
 
   knex
@@ -29,7 +29,7 @@ router.get('/tags/:id', (req, res, next) => {
 });
 
 // Create/POST(insert) a tag
-router.post('/tags', (req, res, next) => {
+router.post('/', (req, res, next) => {
   const { name } = req.body;
 
   /****** Never trust users. Validate input *******/
@@ -52,4 +52,32 @@ router.post('/tags', (req, res, next) => {
     .catch(err => next(err));
 });
 
+// Update/PUT a single tag
+router.put('/:id', (req, res, next) => {
+  const { name } = req.body;
+
+  /***** Never trust users. Validate input ******/
+  if (!name) {
+    const err = new Error('Missing `name` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  const updateItem = { name };
+
+  knex('tags')
+    .update(updateItem)
+    .where('id', req.params.id)
+    .returning(['id', 'name'])
+    .then(([result]) => {
+      if (result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(err => next(err));
+});
+
+// Delete a  single tag
 module.exports = router;
