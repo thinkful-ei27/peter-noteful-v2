@@ -106,14 +106,14 @@ router.post('/', (req, res, next) => {
     .then(() => {
       // Select the new note and leftJoin on folders and tags
       return knex
-        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tag.name as tagName')
+        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName')
         .from('notes')
         .leftJoin('folders', 'notes.folder_id', 'folders.id')
         .leftJoin('notes_tags', 'notes.id', 'notes_tags.note_id')
         .leftJoin('tags', 'tags.id', 'notes_tags.tag_id')
         .where('notes.id', noteId);
     })
-    .then(([result]) => {
+    .then((result) => {
       if (result) {
         // Hydrate result
         const hydrated = hydrateNotes(result)[0];
@@ -122,6 +122,7 @@ router.post('/', (req, res, next) => {
       } else {
         next();
       }
+      
     })
     .catch(err => next(err));
 });
@@ -139,8 +140,8 @@ router.put('/:id', (req, res, next) => {
   }
 
   const updateItem = {
-    title: title,
-    content: content,
+    title,
+    content,
     folder_id: folderId ? folderId : null
   };
 
@@ -148,7 +149,7 @@ router.put('/:id', (req, res, next) => {
   // Update note in notes table
     .update(updateItem)
     .where('id', noteId)
-    .returning(['id'])
+    .returning('*')
     .then(() => {
       // Delete current related tags form notes_tags table
       return knex('notes_tags').del().where('note_id', noteId);
@@ -160,14 +161,15 @@ router.put('/:id', (req, res, next) => {
     })
     .then(() => {
       // Select the new note and leftJoin on folders and tags
-      return knex.select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tag.name as tagName')
+      return knex
+        .select('notes.id', 'title', 'content', 'folder_id as folderId', 'folders.name as folderName', 'tags.id as tagId', 'tags.name as tagName')
         .from('notes')
         .leftJoin('folders', 'notes.folder_id', 'folders.id')
         .leftJoin('notes_tags', 'notes.id', 'notes_tags.note_id')
         .leftJoin('tags', 'tags.id', 'notes_tags.tag_id')
         .where('notes.id', noteId);
     })
-    .then(([result]) => {
+    .then((result) => {
       if (result) {
         // Hydrate the results
         const hydrated = hydrateNotes(result)[0];
