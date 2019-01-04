@@ -84,7 +84,7 @@ router.delete('/folders/:id', (req, res, next) => {
   knex('folders')
     .where('id', id)
     .del()
-    .then(results => res.sendStatus(204))
+    .then(() => res.sendStatus(204).end())
     .catch(err => next(err));
 });
 
