@@ -24,7 +24,13 @@ router.get('/:id', (req, res, next) => {
     .from('tags')
     .where('id', id)
     .orderBy('id')
-    .then(results => res.json(results[0]))
+    .then(results => {
+      if(results) {
+        res.json(results[0]);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 });
 
@@ -86,7 +92,7 @@ router.delete('/:id', (req, res, next) => {
   knex('tags')
     .where('id', id)
     .del()
-    .then(() => res.sendStatus(204))
+    .then(() => res.sendStatus(204).end())
     .catch(err => next(err));
 });
 

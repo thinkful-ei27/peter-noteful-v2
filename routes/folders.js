@@ -10,9 +10,7 @@ router.get('/folders', (req, res, next) => {
   knex.select('id', 'name')
     .from('folders')
     .orderBy('id')
-    .then(results => {
-      res.json(results);
-    })
+    .then(results => res.json(results))
     .catch(err => next(err));
 });
 
@@ -25,7 +23,36 @@ router.get('/folders/:id', (req, res, next) => {
     .from('folders')
     .where('id', id)
     .orderBy('id')
-    .then(results => res.json(results[0]))
+    .then(results => {
+      if(results) {
+        res.json(results[0]);
+      } else {
+        next();
+      }
+    })
+    .catch(err => next(err));
+});
+
+// Post - Create(insert) New Folder
+router.post('/folders', (req, res, next) => {
+  const { name } = req.body;
+
+  /***** Never trust users - validate input *****/
+  if (!name) {
+    const err = new Error('Missing `name` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  const newItem = {name};
+
+  knex
+    .insert(newItem, 'name')
+    .into('folders')
+    .then(results => {
+      const result = results[0];
+      res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+    })
     .catch(err => next(err));
 });
 
@@ -58,26 +85,6 @@ router.put('/:id', (req, res, next) => {
     });
 });
 
-// Post - Create(insert) New Folder
-router.post('/folders', (req, res, next) => {
-  const { name } = req.body;
-
-  const newItem = {name};
-
-  /***** Never trust users - validate input *****/
-  if (!newItem.name) {
-    const err = new Error('Missing `name` in request body');
-    err.status = 400;
-    return next(err);
-  }
-
-  knex
-    .insert(newItem, 'name')
-    .into('folders')
-    .then(results => res.json(results[0]))
-    .catch(err => next(err));
-});
-
 router.delete('/folders/:id', (req, res, next) => {
   const { id } = req.params;
 
@@ -87,6 +94,5 @@ router.delete('/folders/:id', (req, res, next) => {
     .then(() => res.sendStatus(204).end())
     .catch(err => next(err));
 });
-
 
 module.exports = router;  
